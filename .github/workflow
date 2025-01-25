@@ -1,0 +1,48 @@
+name: Build Kivy to APK
+
+on:
+  push:
+    branches:
+      - main  # Trigger workflow on push to the 'main' branch
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Step 1: Checkout the repository
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    # Step 2: Set up Python environment
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.9
+
+    # Step 3: Install dependencies
+    - name: Install Buildozer and dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y python3-pip python3-venv zip openjdk-11-jdk
+        pip install --upgrade pip
+        pip install buildozer
+
+    # Step 4: Initialize and build APK
+    - name: Build APK
+      run: |
+        python3 -m venv venv
+        source venv/bin/activate
+        pip install cython
+        buildozer init
+        buildozer android debug
+
+    # Step 5: Upload APK as artifact
+    - name: Upload APK
+      uses: actions/upload-artifact@v3
+      with:
+        name: kivy-apk
+        path: bin/*.apk
